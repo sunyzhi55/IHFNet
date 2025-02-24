@@ -1,8 +1,6 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
-
 class FocalLoss(nn.Module):
     def __init__(self, alpha=0.3, gamma=2, reduction='mean'):
         """
@@ -138,63 +136,12 @@ class joint_loss(nn.Module):
 
         # return cross_entropy_loss + 0.01 * SDM_loss
 
-class jointLossWithTwoInput(nn.Module):
-    def __init__(self, w1=0.2, w2=0.01):
-        super(jointLossWithTwoInput, self).__init__()
-        self.w1 = w1
-        self.w2 = w2
-        # self.Cross_Entropy_Loss = nn.CrossEntropyLoss()
-        self.Similarity_Distribution_Matching_Loss_1 = Similarity_Distribution_Matching_Loss(2)
-        self.Similarity_Distribution_Matching_Loss_2 = Similarity_Distribution_Matching_Loss(2)
-        self.Focal_loss = FocalLoss()
-        self.KL_loss = KL_Loss()
-    def forward(self, modality1_features, modality2_features, labels, scores):
-        w1 = self.w1
-        w2 = self.w2
-        modality1_features = modality1_features.squeeze()
-        modality2_features = modality2_features.squeeze()
-
-        cross_entropy_loss = self.Focal_loss(scores, labels)
-        # cross_entropy_loss = self.Cross_Entropy_Loss(scores, labels)
-        # kl_loss = self.KL_loss(shared_output_mri, shared_output_pet)
-        if labels.dim() == 1:
-            labels = labels.unsqueeze(1)
-        rv_sdm = self.Similarity_Distribution_Matching_Loss_1(modality1_features, modality2_features, labels)
-        vr_sdm = self.Similarity_Distribution_Matching_Loss_2(modality2_features, modality1_features, labels)
-
-        multi_loss = (1 - w1) * rv_sdm + w1 * vr_sdm
-        task_loss = cross_entropy_loss
-        return task_loss + w2 * multi_loss
-
-
 class LatentFusionLoss(nn.Module):
     def __init__(self, w1=0.2, w2=0.01):
         super(LatentFusionLoss, self).__init__()
-        # self.w1 = w1
-        # self.w2 = w2
-        # self.Cross_Entropy_Loss = nn.CrossEntropyLoss()
-        # self.Similarity_Distribution_Matching_Loss_1 = Similarity_Distribution_Matching_Loss(2)
-        # self.Similarity_Distribution_Matching_Loss_2 = Similarity_Distribution_Matching_Loss(2)
-        # self.Similarity_Distribution_Matching_Loss_3 = Similarity_Distribution_Matching_Loss(2)
-        # self.Focal_loss = FocalLoss()
+
         self.bceloss = nn.BCELoss()
     def forward(self, outputs, label):
-        # w1 = self.w1
-        # w2 = self.w2
-        # modality1_features = modality1_features.squeeze()
-        # modality2_features = modality2_features.squeeze()
-        # modality3_features = modality3_features.squeeze()
-        # cross_entropy_loss = self.Focal_loss(scores, labels)
-        # # cross_entropy_loss = self.Cross_Entropy_Loss(scores, labels)
-        #
-        # if labels.dim() == 1:
-        #     labels = labels.unsqueeze(1)
-        # rv_sdm = self.Similarity_Distribution_Matching_Loss_1(modality1_features, modality2_features, labels)
-        # rc_sdm = self.Similarity_Distribution_Matching_Loss_2(modality2_features, modality3_features, labels)
-        # vc_sdm = self.Similarity_Distribution_Matching_Loss_3(modality1_features, modality3_features, labels)
-        #
-        # multi_loss = (1 - w1) * rv_sdm + w1 * (rc_sdm + vc_sdm) / 2
-        # task_loss = cross_entropy_loss
 
         loss_mri = self.bceloss(outputs[0], label)
         loss_pet = self.bceloss(outputs[1], label)

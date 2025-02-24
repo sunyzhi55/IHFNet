@@ -66,7 +66,6 @@ def run_main_1(observer, epochs, train_loader, test_loader, model, device, optim
             loss.backward()
             optimizer.step()
 
-
         with torch.no_grad():
             model.eval()
             test_bar = tqdm(test_loader, leave=True, file=sys.stdout)
@@ -119,7 +118,6 @@ def run_main_2(observer, epochs, train_loader, test_loader, model, device, optim
             optimizer.step()
         if scheduler:
             scheduler.step()
-
 
         with torch.no_grad():
             model.eval()

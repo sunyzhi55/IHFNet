@@ -1,6 +1,3 @@
-"""
-PoolFormer implementation
-"""
 import os
 import copy
 import torch
@@ -478,38 +475,4 @@ def poolformer_m48(pretrained=False, **kwargs):
         checkpoint = torch.hub.load_state_dict_from_url(url=url, map_location="cpu", check_hash=True)
         model.load_state_dict(checkpoint)
     return model
-
-
-if __name__ == "__main__":
-
-    # x = torch.randn(1, 3, 112, 112)
-    # y = model(x)
-    # print(y.shape)
-    """
-    参数量 11407306
-    input torch.Size([1, 3, 32, 32])
-    forward_embeddings torch.Size([1, 64, 8, 8])
-    forward_tokens torch.Size([1, 512, 1, 1])
-    norm torch.Size([1, 512, 1, 1])
-    mean[-2, -1] torch.Size([1, 512])
-    cls_out torch.Size([1, 10])
-    torch.Size([1, 10])
-    """
-    a = torch.randn(8, 1, 96, 128, 96)
-    model = poolformer_s12(num_classes=400)
-    print("参数量", sum(p.numel() for p in model.parameters()))
-    layer_output1, layer_output2, layer_output3, layer_output4, layer_output5 = model(a)
-    print(layer_output1.shape)
-    print(layer_output2.shape)
-    print(layer_output3.shape)
-    print(layer_output4.shape)
-    print(layer_output5.shape)
-    """
-    参数量 15253706
-    torch.Size([1, 64, 24, 32, 24])
-    torch.Size([1, 128, 12, 16, 12])
-    torch.Size([1, 320, 6, 8, 6])
-    torch.Size([1, 512, 3, 4, 3])
-    torch.Size([1, 10])
-    """
 

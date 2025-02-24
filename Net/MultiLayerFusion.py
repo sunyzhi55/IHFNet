@@ -157,7 +157,6 @@ class CrossModal(nn.Module):
 
         return result
 
-
 class CrossSymmetricModal(nn.Module):
     def __init__(self, input_channels, output_channels, kernel_size=3, stride=1, padding=1):
         super(CrossSymmetricModal, self).__init__()
@@ -216,9 +215,9 @@ class CrossSymmetricModal(nn.Module):
 
         return result
 
-class MultiCrossModalInteraction(nn.Module):
+class HierarchicalMambaCrossAttentionModule(nn.Module):
     def __init__(self, input_channel_list:list, output_channel_list:list):
-        super(MultiCrossModalInteraction, self).__init__()
+        super(HierarchicalMambaCrossAttentionModule, self).__init__()
 
         self.crossAttn1 = CrossModal(input_channel_list[0], output_channel_list[0], kernel_size=3, stride=1, padding=1)
         self.crossAttn2 = CrossModal(input_channel_list[1], output_channel_list[1], kernel_size=3, stride=1, padding=1)
@@ -260,21 +259,21 @@ class MultiScaleFusionModule(nn.Module):
             output = torch.cat((output, item), dim=1)
         return output
 
-class SpecificMultiLayerFusion(nn.Module):
+class MriAndPetPyramidEncoderFusion(nn.Module):
     def __init__(self):
-        super(SpecificMultiLayerFusion, self).__init__()
-        self.name = 'MultiLayerFusion_ver1.0'
+        super(MriAndPetPyramidEncoderFusion, self).__init__()
+        self.name = 'MriAndPetPyramidEncoderFusion'
         # self.MRI_encoder = ResNetEncoder(BasicBlock, [2, 2, 2, 2], get_inplanes())
         self.MRI_encoder = ResNetEncoder(BasicBlock, [3, 4, 6, 3], get_inplanes()) # resnet34
 
         # self.MRI_encoder = poolformer_s12(num_classes=400)
         # self.PET_encoder = ResNetEncoder(BasicBlock, [2, 2, 2, 2], get_inplanes())
         self.PET_encoder = poolformer_s12(num_classes=400)
-        self.CLI_encoder = TransformerEncoder(output_dim=256)
+        self.CLI_encoder = TableEncoder(output_dim=256)
         # self.MRI_CMIM = MultiCrossModalInteraction(input_channel_list=[64, 256, 1], output_channel_list=[64, 256, 1])
-        self.MRI_CMIM = MultiCrossModalInteraction(input_channel_list=[128, 1], output_channel_list=[128, 1])
+        self.MRI_HMCAM = HierarchicalMambaCrossAttentionModule(input_channel_list=[128, 1], output_channel_list=[128, 1])
         # self.PET_CMIM = MultiCrossModalInteraction(input_channel_list=[64, 256, 1], output_channel_list=[64, 256, 1])
-        self.PET_CMIM = MultiCrossModalInteraction(input_channel_list=[128, 1], output_channel_list=[128, 1])
+        self.PET_HMCAM = HierarchicalMambaCrossAttentionModule(input_channel_list=[128, 1], output_channel_list=[128, 1])
         self.MSFM = MultiScaleFusionModule()
         # self.mri1_fit = nn.Linear(18432, 256)  # torch.Size([8, 64, 256])
         self.mri2_fit = nn.Linear(2304, 256)  # torch.Size([8, 128, 256])
@@ -316,7 +315,7 @@ class SpecificMultiLayerFusion(nn.Module):
         #                                                                      self.mri3_fit(mri_Layer3_flattened),
         #                                                                      self.mri4_fit(mri_Layer4_flattened),
         #                                                                      self.mrif_fit(output_mri), cli_feature)
-        MRI_CMIM_outputs = self.MRI_CMIM(self.mri2_fit(mri_Layer2_flattened),
+        MRI_CMIM_outputs = self.MRI_HMCAM(self.mri2_fit(mri_Layer2_flattened),
                                          self.mrif_fit(output_mri), cli_feature)
 
 
@@ -331,24 +330,24 @@ class SpecificMultiLayerFusion(nn.Module):
         #                                                                      self.pet3_fit(pet_Layer3_flattened),
         #                                                                      self.pet4_fit(pet_Layer4_flattened),
         #                                                                      self.petf_fit(output_pet), cli_feature)
-        PET_CMIM_outputs = self.PET_CMIM(self.pet2_fit(pet_Layer2_flattened),
+        PET_CMIM_outputs = self.PET_HMCAM(self.pet2_fit(pet_Layer2_flattened),
                                          self.petf_fit(output_pet), cli_feature)
         mri_output = self.MSFM(MRI_CMIM_outputs)
         pet_output = self.MSFM(PET_CMIM_outputs)
 
         return mri_output, pet_output
 
-class SpecificMultiLayerFusionWithoutCMIM(nn.Module):
+class MriAndPetPyramidEncoderFusionWithoutHMCAM(nn.Module):
     def __init__(self):
-        super(SpecificMultiLayerFusionWithoutCMIM, self).__init__()
-        self.name = 'MultiLayerFusion_ver3.0_Ablation_CMIM'
+        super(MriAndPetPyramidEncoderFusionWithoutHMCAM, self).__init__()
+        self.name = 'MriAndPetPyramidEncoderFusionWithoutHMCAM'
         # self.MRI_encoder = ResNetEncoder(BasicBlock, [2, 2, 2, 2], get_inplanes())
         self.MRI_encoder = ResNetEncoder(BasicBlock, [3, 4, 6, 3], get_inplanes()) # resnet34
 
         # self.MRI_encoder = poolformer_s12(num_classes=400)
         # self.PET_encoder = ResNetEncoder(BasicBlock, [2, 2, 2, 2], get_inplanes())
         self.PET_encoder = poolformer_s12(num_classes=400)
-        self.CLI_encoder = TransformerEncoder(output_dim=256)
+        self.CLI_encoder = TableEncoder(output_dim=256)
 
     def forward(self, mri, pet, cli):
         """
@@ -363,14 +362,11 @@ class SpecificMultiLayerFusionWithoutCMIM(nn.Module):
         cli_feature = self.CLI_encoder(cli)
         mri_output =  torch.cat((output_mri, cli_feature), dim=1) # torch.Size([8, 656])
         pet_output =  torch.cat((output_pet, cli_feature), dim=1) # torch.Size([8, 656])
-
-
-
         return mri_output, pet_output
 
-class SharedMultiScaleExtraction(nn.Module):
+class SharedPyramidEncoder(nn.Module):
     def __init__(self):
-        super(SharedMultiScaleExtraction, self).__init__()
+        super(SharedPyramidEncoder, self).__init__()
         self.name = 'SharedKMultiScaleFeatureExtractionLayer'
         self.sharedFeatureExtractor = ResNetEncoder(BasicBlock, [2, 2, 2, 2], get_inplanes())
     def forward(self, mri, pet, cli):
@@ -400,10 +396,10 @@ class SharedMultiScaleExtraction(nn.Module):
         # return output
         return output_mri, output_pet, output
 
-# MutanLayer In Interactive Multimodal Fusion Model
-class MutanLayer(nn.Module):
+# TripleHybridFusion implementation
+class TripleHybridFusion(nn.Module):
     def __init__(self, dim, multi):
-        super(MutanLayer, self).__init__()
+        super(TripleHybridFusion, self).__init__()
 
         self.dim = dim
         self.multi = multi
@@ -442,156 +438,16 @@ class MutanLayer(nn.Module):
         x_mm = torch.relu(x_mm)
         return x_mm
 
-class TriModalCrossAttention_ver2(nn.Module):
-    def __init__(self, input_dim):
-        super(TriModalCrossAttention_ver2, self).__init__()
 
-        # 定义 Query, Key, Value 的线性变换
-        self.W_q = nn.Linear(input_dim * 3, input_dim)  # 用于拼接后的查询
-        self.W_k1 = nn.Linear(input_dim, input_dim)
-        self.W_v1 = nn.Linear(input_dim, input_dim)
-
-        self.W_k2 = nn.Linear(input_dim, input_dim)
-        self.W_v2 = nn.Linear(input_dim, input_dim)
-
-        self.W_k3 = nn.Linear(input_dim, input_dim)
-        self.W_v3 = nn.Linear(input_dim, input_dim)
-
-        # 输出投影
-        self.W_o1 = nn.Linear(input_dim * 2, input_dim)
-        self.W_o2 = nn.Linear(input_dim * 2, input_dim)
-        self.W_o3 = nn.Linear(input_dim * 2, input_dim)
-        self.dropout = nn.Dropout(0.1)
-
-    def forward(self, x1, x2, x3):
-        # x1, x2, x3: [B, N, input_dim] [8, 256, 1]
-        batch_size, seq_len, input_dim = x1.size()
-
-        # 将三个模态在最后一个维度拼接得到 [B, N, input_dim * 3]
-        combined_input = torch.cat([x1, x2, x3], dim=-1)
-        queries = self.W_q(combined_input)  # [B, N, input_dim * 3]
-
-        # 对每个模态的键和值进行投影
-        keys1 = self.W_k1(x1)  # [B, N, input_dim]
-        values1 = self.W_v1(x1)
-
-        keys2 = self.W_k2(x2)  # [B, N, input_dim]
-        values2 = self.W_v2(x2)
-
-        keys3 = self.W_k3(x3)  # [B, N, input_dim]
-        values3 = self.W_v3(x3)
-
-        # 分别计算每个模态的交叉注意力输出
-        attention_scores1 = torch.matmul(queries, keys1.transpose(-2, -1)) / (input_dim ** 0.5)  # [B, N, N]
-        attention_weights1 = F.softmax(attention_scores1, dim=-1)
-        context1 = torch.matmul(self.dropout(attention_weights1), values1)  # [B, N, input_dim]
-
-        attention_scores2 = torch.matmul(queries, keys2.transpose(-2, -1)) / (input_dim ** 0.5)  # [B, N, N]
-        attention_weights2 = F.softmax(attention_scores2, dim=-1)
-        context2 = torch.matmul(self.dropout(attention_weights2), values2)  # [B, N, input_dim]
-
-        attention_scores3 = torch.matmul(queries, keys3.transpose(-2, -1)) / (input_dim ** 0.5)  # [B, N, N]
-        attention_weights3 = F.softmax(attention_scores3, dim=-1)
-        context3 = torch.matmul(self.dropout(attention_weights3), values3)  # [B, N, input_dim]
-
-        # 将原输入与注意力上下文拼接
-        combined1 = torch.cat((x1, context1), dim=-1)  # [B, N, input_dim * 2]
-        combined2 = torch.cat((x2, context2), dim=-1)  # [B, N, input_dim * 2]
-        combined3 = torch.cat((x3, context3), dim=-1)  # [B, N, input_dim * 2]
-
-        # 线性变换生成最终输出
-        output1 = self.W_o1(combined1)  # [B, N, input_dim]
-        output2 = self.W_o2(combined2)  # [B, N, input_dim]
-        output3 = self.W_o3(combined3)  # [B, N, input_dim]
-
-        # 将三个模态的输出在第二维度拼接 [B, N * 3, input_dim]
-        vision_feature = shuffle_interleave(output1, output2)
-        # global_feature = torch.cat((output1, output2, output3), dim=1)
-        global_feature = torch.cat((vision_feature,output3), dim=1)
-
-        return output1, output2, output3, global_feature
-
-class TripleModelConcat(nn.Module):
+class IHFNet(nn.Module):
     def __init__(self):
-        super(TripleModelConcat, self).__init__()
-        self.name = 'TripleModelConcat'
-    def forward(self, mri, pet, cli):
-        # 将三个模态的输出在第二维度拼接 [B, N * 3, input_dim]
-        vision_feature = shuffle_interleave(mri, pet)
-        # global_feature = torch.cat((output1, output2, output3), dim=1)
-        global_feature = torch.cat((vision_feature, cli), dim=1)
-
-        return mri, pet, cli, global_feature
-
-class DualModalConcat(nn.Module):
-    def __init__(self):
-        super(DualModalConcat, self).__init__()
-        self.name = 'DualModalConcat'
-    def forward(self, mri, pet):
-        global_feature = torch.cat((mri, pet), dim=1)
-        return mri, pet, global_feature
-
-class MultiLayerFusionModel(nn.Module):
-    def __init__(self):
-        super(MultiLayerFusionModel, self).__init__()
-        self.sharedFeatureExtractor = SharedMultiScaleExtraction()
-        self.specificFeatureFusion = SpecificMultiLayerFusion()
+        super(IHFNet, self).__init__()
+        self.sharedFeatureExtractor = SharedPyramidEncoder()
+        self.specificFeatureFusion = MriAndPetPyramidEncoderFusion()
         # self.triModalAttention = TriModalCrossAttention_ver2(input_dim=1)
 
-        self.triModalAttention = TripleModelConcat()
-        self.classify_head = DenseNet(layer_num=(6, 12, 24, 16), growth_rate=16, in_channels=1, classes=2)
-        # 使用全局平均池化将321维压缩到1维
-        self.pool = nn.AdaptiveAvgPool1d(1)
-
-        self.image_fit_model = nn.Linear(321, 256)
-        # self.image_fit_model2 = nn.Linear(256, 1)
-        self.shared_fit_model = KAN([800, 256])
-    def forward(self, mri, pet, cli):
-        """
-         specific_mri_output torch.Size([8, 321, 256])
-         specific_pet_output torch.Size([8, 321, 256])
-         shared_mri_pet_output torch.Size([8, 800])
-        """
-        specific_mri_output, specific_pet_output = self.specificFeatureFusion(mri, pet, cli)
-        shared_output_mri, shared_output_pet, shared_mri_pet_output = self.sharedFeatureExtractor(mri, pet, cli)
-
-        # print("specific_mri_output", specific_mri_output.shape) # torch.Size([8, 321, 256])
-        # print("specific_pet_output", specific_pet_output.shape) # torch.Size([8, 321, 256])
-        # print("shared_mri_pet_output", shared_mri_pet_output.shape) # torch.Size([8, 800])
-
-        specific_mri_output = self.pool(specific_mri_output)
-        # print("specific_mri_output", specific_mri_output.shape)  # torch.Size([8, 321, 1])
-        specific_mri_output = specific_mri_output.squeeze(dim=-1)
-        specific_mri_output_fit = self.image_fit_model(specific_mri_output).unsqueeze(dim=-1)
-        # print("specific_mri_output_fit", specific_mri_output_fit.shape)  # torch.Size([8, 256, 1])
-
-        specific_pet_output = self.pool(specific_pet_output)
-        specific_pet_output = specific_pet_output.squeeze(dim=-1)
-        specific_pet_output_fit = self.image_fit_model(specific_pet_output).unsqueeze(dim=-1)
-        # print("specific_pet_output_fit", specific_pet_output_fit.shape)  # torch.Size([8, 256, 1])
-
-        shared_mri_pet_output_fit = self.shared_fit_model(shared_mri_pet_output).unsqueeze(dim=-1)
-        # print("shared_mri_pet_output_fit", shared_mri_pet_output_fit.shape)  # torch.Size([8, 256, 1])
-
-        output1, output2, output3, global_feature = self.triModalAttention(specific_mri_output_fit, specific_pet_output_fit, shared_mri_pet_output_fit)
-        # print("output1", output1.shape)  # torch.Size([8, 256, 1])
-        # print("output2", output2.shape)  # torch.Size([8, 256, 1])
-        # print("output3", output3.shape)  # torch.Size([8, 256, 1])
-        # print("global_feature", global_feature.shape)  # torch.Size([8, 768, 1])
-        global_feature = global_feature.permute(0, 2, 1)  # torch.Size([8, 1, 768])
-
-        classified_output = self.classify_head(global_feature)
-        return output1, output2, output3, shared_output_mri, shared_output_pet, classified_output
-
-class MultiLayerFusionModelWithLatentFusion(nn.Module):
-    def __init__(self):
-        super(MultiLayerFusionModelWithLatentFusion, self).__init__()
-        self.sharedFeatureExtractor = SharedMultiScaleExtraction()
-        self.specificFeatureFusion = SpecificMultiLayerFusion()
-        # self.triModalAttention = TriModalCrossAttention_ver2(input_dim=1)
-
-        self.triModalFusion = MutanLayer(dim=128, multi=2)
-        self.classify_head = MlpKan(init_features=128, classes=2)
+        self.triModalFusion = TripleHybridFusion(dim=128, multi=2)
+        self.classify_head = MLKan(init_features=128, classes=2)
         # self.classify_head = DenseNet(layer_num=(6, 12, 24, 16), growth_rate=16, in_channels=1, classes=2)
         # 使用全局平均池化将256维压缩到1维
         self.pool = nn.AdaptiveAvgPool1d(1)
@@ -637,70 +493,16 @@ class MultiLayerFusionModelWithLatentFusion(nn.Module):
 
         return [mri_output, pet_output, shared_output, global_output]
 
-class MultiLayerFusionModelWithTwoEncoder(nn.Module):
+
+class IHFNet_Without_HMCAM(nn.Module):
     def __init__(self):
-        super(MultiLayerFusionModelWithTwoEncoder, self).__init__()
-        # self.sharedFeatureExtractor = SharedMultiScaleExtraction()
-        self.specificFeatureFusion = SpecificMultiLayerFusion()
-        # self.triModalAttention = TripleModelConcat()
-        self.dualModalFusion = DualModalConcat()
-
-        self.classify_head = DenseNet(layer_num=(6, 12, 24, 16), growth_rate=16, in_channels=1, classes=2)
-        # 使用全局平均池化将321维压缩到1维
-        self.pool = nn.AdaptiveAvgPool1d(1)
-
-        self.image_fit_model = nn.Linear(321, 256)
-        # self.image_fit_model2 = nn.Linear(256, 1)
-        self.shared_fit_model = KAN([800, 256])
-    def forward(self, mri, pet, cli):
-        """
-         specific_mri_output torch.Size([8, 321, 256])
-         specific_pet_output torch.Size([8, 321, 256])
-         shared_mri_pet_output torch.Size([8, 800])
-        """
-        specific_mri_output, specific_pet_output = self.specificFeatureFusion(mri, pet, cli)
-        # shared_output_mri, shared_output_pet, shared_mri_pet_output = self.sharedFeatureExtractor(mri, pet, cli)
-
-        # print("specific_mri_output", specific_mri_output.shape) # torch.Size([8, 321, 256])
-        # print("specific_pet_output", specific_pet_output.shape) # torch.Size([8, 321, 256])
-        # print("shared_mri_pet_output", shared_mri_pet_output.shape) # torch.Size([8, 800])
-
-        specific_mri_output = self.pool(specific_mri_output)
-        # print("specific_mri_output", specific_mri_output.shape)  # torch.Size([8, 321, 1])
-        specific_mri_output = specific_mri_output.squeeze(dim=-1)
-        specific_mri_output_fit = self.image_fit_model(specific_mri_output).unsqueeze(dim=-1)
-        # print("specific_mri_output_fit", specific_mri_output_fit.shape)  # torch.Size([8, 256, 1])
-
-        specific_pet_output = self.pool(specific_pet_output)
-        specific_pet_output = specific_pet_output.squeeze(dim=-1)
-        specific_pet_output_fit = self.image_fit_model(specific_pet_output).unsqueeze(dim=-1)
-        # print("specific_pet_output_fit", specific_pet_output_fit.shape)  # torch.Size([8, 256, 1])
-
-        # shared_mri_pet_output_fit = self.shared_fit_model(shared_mri_pet_output).unsqueeze(dim=-1)
-        # print("shared_mri_pet_output_fit", shared_mri_pet_output_fit.shape)  # torch.Size([8, 256, 1])
-
-        # output1, output2, output3, global_feature = self.triModalAttention(specific_mri_output_fit, specific_pet_output_fit, shared_mri_pet_output_fit)
-
-        output1, output2, global_feature = self.dualModalFusion(specific_mri_output_fit, specific_pet_output_fit)
-        # print("output1", output1.shape)  # torch.Size([8, 256, 1])
-        # print("output2", output2.shape)  # torch.Size([8, 256, 1])
-        # print("output3", output3.shape)  # torch.Size([8, 256, 1])
-        # print("global_feature", global_feature.shape)  # torch.Size([8, 512, 1])
-        global_feature = global_feature.permute(0, 2, 1)  # torch.Size([8, 1, 512])
-
-        classified_output = self.classify_head(global_feature)
-        # return output1, output2, output3, shared_output_mri, shared_output_pet, classified_output
-        return output1, output2, classified_output
-
-class MultiLayerFusionModelWithoutCMIM(nn.Module):
-    def __init__(self):
-        super(MultiLayerFusionModelWithoutCMIM, self).__init__()
-        self.sharedFeatureExtractor = SharedMultiScaleExtraction()
-        self.specificFeatureFusion = SpecificMultiLayerFusionWithoutCMIM()
+        super(IHFNet_Without_HMCAM, self).__init__()
+        self.sharedFeatureExtractor = SharedPyramidEncoder()
+        self.specificFeatureFusion = MriAndPetPyramidEncoderFusionWithoutHMCAM()
         # self.triModalAttention = TriModalCrossAttention_ver2(input_dim=1)
 
-        self.triModalFusion = MutanLayer(dim=128, multi=2)
-        self.classify_head = MlpKan(init_features=128, classes=2)
+        self.triModalFusion = TripleHybridFusion(dim=128, multi=2)
+        self.classify_head = MLKan(init_features=128, classes=2)
         # self.classify_head = DenseNet(layer_num=(6, 12, 24, 16), growth_rate=16, in_channels=1, classes=2)
         # 使用全局平均池化将256维压缩到1维
         self.pool = nn.AdaptiveAvgPool1d(1)
@@ -739,64 +541,3 @@ class MultiLayerFusionModelWithoutCMIM(nn.Module):
 
         return [mri_output, pet_output, shared_output, global_output]
 
-if __name__ == '__main__':
-    # # Test The KL loss
-    # x = torch.randn((8, 400))
-    # y = torch.randn((8, 400))
-    # # 先转化为概率，之后取对数
-    # x_log = F.log_softmax(x, dim=1)
-    # # 只转化为概率
-    # y = F.softmax(y, dim=1)
-    # kl = nn.KLDivLoss(reduction='batchmean')
-    # out = kl(x_log, y)
-    # print(x)
-    # print(x_log)
-    # print(y)
-    # print(out)
-
-
-    x = torch.randn(8, 1, 96, 128, 96)
-    y = torch.randn(8, 1, 96, 128, 96)
-    z = torch.randn(8, 9)
-    model = MultiLayerFusionModelWithTwoEncoder()
-    print("参数量 for model：", sum(p.numel() for p in model.parameters()))
-    a, b, c = model(x, y, z)
-    print(a.shape)
-    print(b.shape)
-    print(c.shape)
-    """
-    torch.Size([8, 256, 1])
-    torch.Size([8, 256, 1])
-    torch.Size([8, 2])
-    """
-
-
-    # print(model(x, y, z).
-    # shape)
-    # model = SpecificMultiLayerFusion()
-    # model2 = SharedMultiScaleExtraction()
-    # print("参数量 for model：", sum(p.numel() for p in model.parameters()))
-    # print("参数量 for model2：", sum(p.numel() for p in model2.parameters()))
-    # mri_output, pet_output = model(x, y, z)
-    # shared_output = model2(x, y, z)
-    # print("mri_output", mri_output.shape)
-    # print("pet_output", pet_output.shape)
-    # print("shared_output", shared_output.shape)
-    """
-    mri_output torch.Size([8, 321, 256])
-    pet_output torch.Size([8, 321, 256])
-    shared_output torch.Size([8, 800])
-    """
-    # a = torch.randn([8, 256, 1])
-    # b = torch.randn([8, 256, 1])
-    # c = torch.randn([8, 256, 1])
-    # attention_model = TriModalCrossAttention_ver2(input_dim=1)
-    # output1, output2, output3, global_feature = attention_model(a, b, c)
-    # print("参数量 for attention_model", sum(p.numel() for p in attention_model.parameters()))
-    # print(output1.shape)
-    # print(output2.shape)
-    # print(output3.shape)
-    # print(global_feature.shape)
-    # classify_head = DenseNet(layer_num=(6, 12, 24, 16), growth_rate=16, in_channels=1, classes=2)
-    # print("参数量 for classify_head", sum(p.numel() for p in classify_head.parameters()))
-    # print(classify_head(global_feature.permute(0, 2, 1)).shape)

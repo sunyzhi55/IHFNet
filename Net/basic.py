@@ -5,7 +5,7 @@ from timm.models.layers import DropPath, trunc_normal_
 from Net.kan import*
 from mamba_ssm import Mamba
 
-# 定义交叉洗牌函数，交叉/穿插拼接
+
 def shuffle_interleave(tensor1, tensor2):
     batch_size, length, dim= tensor1.shape
 
@@ -104,32 +104,7 @@ class Bottleneck(nn.Module):
         out = self.relu(out)
 
         return out
-def get_pretrained_Vision_Encoder(**kwargs):
-    # model = ResNetDualInput(Bottleneck, [3, 4, 6, 3], get_inplanes())
-    model = ResNet(Bottleneck, [3, 4, 6, 3], get_inplanes())
-    # /mntcephfs/lab_data/wangcm/hxy/Pre-model/r3d50_K_200ep.pth
-    # /home/shenxiangyuhd/PretrainedResnet/r3d50_K_200ep.pth
-    # /home/wangchangmiao/syz/PretrainedResnet/r3d50_K_200ep.pth
-    state_dict = torch.load(r"/home/shenxiangyuhd/PretrainedResnet/r3d50_K_200ep.pth")['state_dict']
-    keys = list(state_dict.keys())
-    state_dict.pop(keys[0])
-    state_dict.pop(keys[-1])
-    state_dict.pop(keys[-2])
 
-    model.load_state_dict(state_dict, strict=False)
-
-    # for name, param in model.named_parameters():
-    #     if name in state_dict.keys():
-    #         param.requires_grad = False
-
-    return model
-
-# 提取特征的Resnet不是预训练的
-def get_no_pretrained_Vision_Encoder(**kwargs):
-    # model = ResNetDualInput(Bottleneck, [3, 4, 6, 3], get_inplanes())
-    model = ResNet(Bottleneck, [3, 4, 6, 3], get_inplanes())
-
-    return model
 
 class LayerNorm(nn.Module):
     def __init__(self, hidden_size, eps=1e-12):
@@ -204,9 +179,9 @@ class TransformerStylePoolFormer(nn.Module):
             x = block(x)
         return x
 
-class TransformerEncoder(nn.Module):
+class TableEncoder(nn.Module):
     def __init__(self, input_dim=9, embed_dim=128, num_heads=4, ff_hidden_dim=512, num_layers=3, output_dim=400):
-        super(TransformerEncoder, self).__init__()
+        super(TableEncoder, self).__init__()
 
         # Step 1: Input Embedding (Projection)
         self.embedding = nn.Linear(input_dim, embed_dim)  # 把输入投影到更高维度（可调）
@@ -450,17 +425,18 @@ class DenseNet(torch.nn.Module):
         """
         return x
 
-class MlpKan(torch.nn.Module):
+class MLKan(torch.nn.Module):
     def __init__(self, init_features=64, classes=2):
         """
         1D-DenseNet Module, use to conv global feature and generate final target
         """
-        super(MlpKan, self).__init__()
+        super(MLKan, self).__init__()
         self.feature_channel_num = init_features
 
         self.classifer = torch.nn.Sequential(
-            torch.nn.Linear(self.feature_channel_num, self.feature_channel_num // 2),
-            # KAN([self.feature_channel_num, self.feature_channel_num // 2]),
+            # torch.nn.Linear(self.feature_channel_num, self.feature_channel_num // 2),
+            KAN([self.feature_channel_num, self.feature_channel_num // 2]),
+        # KAN([self.feature_channel_num, self.feature_channel_num // 2]),
             torch.nn.ReLU(),
             torch.nn.Dropout(0.5),
             # torch.nn.Linear(self.feature_channel_num // 2, classes),

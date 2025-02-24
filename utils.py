@@ -81,38 +81,6 @@ def init_net(net, init_type='normal', init_gain=0.02, gpu_ids=None):
     init_weights(net, init_type, gain=init_gain)
     return net
 
-# 自定义网络
-# def define_net(netCls, class_num=4, init_type='normal', init_gain=0.02, m=0.99, gpu_ids=[]):
-#     """
-#     define the corresponding network
-#     :param netCls: define type
-#     :param class_num: the class number
-#     :param init_type:  initialized method
-#     :param gain: corresponding gain
-#     :param m: the momentum decay value for online prototype update scheme
-#     :param gpu_ids: the gpu ids
-#     :return: the initialized network
-#     """
-#     if netCls == 'resnet10':
-#         net = resnet10(spatial_size=128, sample_duration=128, num_classes=class_num, m=m)
-#     elif netCls == 'resnet18':
-#         net = resnet18(spatial_size=128, sample_duration=128, num_classes=class_num, m=m)
-#     elif netCls == 'resnet34':
-#         net = resnet34(spatial_size=128, sample_duration=128, num_classes=class_num, m=m)
-#     elif netCls == 'resnet50':
-#         net = resnet50(spatial_size=128, sample_duration=128, num_classes=class_num, m=m)
-#     elif netCls == 'resnet101':
-#         net = resnet101(spatial_size=128, sample_duration=128, num_classes=class_num, m=m)
-#     elif netCls == 'resnet152':
-#         net = resnet152(spatial_size=128, sample_duration=128, num_classes=class_num, m=m)
-#     elif netCls == 'resnet200':
-#         net = resnet200(spatial_size=128, sample_duration=128, num_classes=class_num, m=m)
-#     elif netCls == 'Triple':
-#         net = Triple_model_CrossAttentionFusion()
-#     else:
-#         print('model is not defined')
-#         raise NotImplementedError
-#     return init_net(net, init_type, init_gain, gpu_ids)
 
 def define_net(netCls, class_num=4, init_type='normal', init_gain=0.02, m=0.99, gpu_ids=[]):
     """

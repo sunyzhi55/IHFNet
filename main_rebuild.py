@@ -31,7 +31,7 @@ def prepare_to_train(mri_dir, pet_dir, cli_dir, csv_file, batch_size, model_inde
     # K折交叉验证
     # kf = KFold(n_splits=n_splits, shuffle=True, random_state=seed)
     skf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=seed)
-    labels = [data[3] for data in dataset]  # 假设dataset[i]的第3项是label
+    labels = [data[3] for data in dataset]  # dataset[i]的第3项是label
     # 存储每个fold的评估指标
     metrics = {
         'accuracy': [],

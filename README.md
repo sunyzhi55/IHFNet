@@ -1,1 +1,2 @@
-This is a Multiple layer Fusion Model for ADNI1 and ADNI2 dataset.
+This is code for 《IHFNet: Incomplete Multimodal Hierarchical Feature Fusion Network for Mild Cognitive Impairment Conversion Prediction》
+
