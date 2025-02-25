@@ -18,9 +18,6 @@ def parse_args():
 
 
     # data_dir
-    # /home/publicdata/ADNI/ADNI1
-    # /mntcephfs/med_dataset/huxiangyang/ADNI/freesurfer/ADNI1
-    # /data3/wangchangmiao/ADNI/freesurfer/ADNI1
     parser.add_argument('--mri_dir', type=str, default='/data3/wangchangmiao/ADNI/freesurfer/ADNI1/MRI', help='mri input path')
     parser.add_argument('--pet_dir', type=str, default='/data3/wangchangmiao/ADNI/freesurfer/ADNI1/PET_PULS_GENERATE', help='pet input path')
     parser.add_argument('--csv_file', type=str, default='./ADNI1_label.csv', help='label input path')
