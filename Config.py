@@ -10,7 +10,7 @@ def parse_args():
     parser.add_argument('--name', type=str, default='experiment_name',
                         help='name of the experiment. It decides where to store samples and models')
     parser.add_argument('--cli_dir', type=str, default='./ADNI_Clinical.csv', help='pet input path')
-    parser.add_argument('----model', type=str, default='MLF')
+    parser.add_argument('----model', type=str, default='IHFNet')
     parser.add_argument("--seed", default=42, type=int, help="seed given by LinkStart.py on cross Val")
 
     parser.add_argument("--n_splits", default=5, type=int, help="0~4")
