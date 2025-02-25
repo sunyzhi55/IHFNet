@@ -8,7 +8,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 from skimage import transform as skt
 import nibabel as nib
-from timm.models.layers import DropPath, trunc_normal_
 
 def get_clinical(sub_id, clin_df):
     '''Gets clinical features vector by searching dataframe for image id'''

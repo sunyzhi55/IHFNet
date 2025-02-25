@@ -2,19 +2,6 @@ import torch
 import torch.nn.functional as F
 import math
 
-"""
-1.内存效率提升：原始实现需要扩展所有中间变量来执行不同的激活函数，而此代码中将计算重新制定为使用不同的基函数激活输入，
-  然后线性组合它们。这种重新制定可以显著降低内存成本，并将计算变得更加高效。
-
-2.正则化方法的改变：原始实现中使用的L1正则化需要对张量进行非线性操作，与重新制定的计算不兼容。
-  因此，此代码中将L1正则化改为对权重的L1正则化，这更符合神经网络中常见的正则化方法，并且与重新制定的计算兼容。
-
-3.激活函数缩放选项：原始实现中包括了每个激活函数的可学习缩放，但这个库提供了一个选项来禁用这个特性。
-  禁用缩放可以使模型更加高效，但可能会影响结果。
-
-4.参数初始化的改变：为了解决在MNIST数据集上的性能问题，此代码修改了参数的初始化方式，使用kaiming初始化。
-"""
-
 class KANLinear(torch.nn.Module):
     def __init__(
         self,
@@ -298,7 +285,7 @@ class KANLinear(torch.nn.Module):
         )
 
 
-class KAN(torch.nn.Module): # 封装了一个KAN神经网络模型，可以用于对数据进行拟合和预测。
+class KAN(torch.nn.Module):
     def __init__(
         self,
         layers_hidden,
