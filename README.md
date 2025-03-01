@@ -67,7 +67,7 @@ Finally, run `python main_rebuild.py`.
 
 ## 5 Experimental Result
 
-The comparative experimental results in ADNI1 datasets.
+1、The comparative experimental results in ADNI1 datasets.
 
 | Method       | Modality | ACC          | PRE          | BACC         | AUC          | F1           |
 | ------------ | -------- | ------------ | ------------ | ------------ | ------------ | ------------ |
@@ -80,4 +80,18 @@ The comparative experimental results in ADNI1 datasets.
 | IMF          | M,P,C    | <u>0.756</u> | 0.740        | 0.710        | 0.720        | 0.605        |
 | IHF(w/o CMG) | M,P,C    | **0.781**    | **0.805**    | **0.741**    | **0.747**    | <u>0.658</u> |
 | IHF          | M,P,C    | 0.737        | <u>0.708</u> | <u>0.723</u> | <u>0.738</u> | **0.666**    |
+
+2、The comparative experimental results in ADNI2 datasets.
+
+| Method       | Modality | ACC          | PRE          | BACC         | AUC          | F1           |
+| ------------ | -------- | ------------ | ------------ | ------------ | ------------ | ------------ |
+| HOPE         | M        | 0.701        | 0.706        | 0.645        | 0.624        | 0.505        |
+| Resnet       | M,P      | 0.809        | 0.721        | 0.683        | 0.709        | 0.510        |
+| JSRL         | M,P      | 0.650        | 0.600        | 0.655        | 0.694        | 0.519        |
+| VAPL         | M,C      | 0.712        | <u>0.750</u> | 0.672        | 0.623        | 0.561        |
+| Diamond      | M,P      | 0.818        | 0.739        | 0.682        | 0.645        | 0.509        |
+| HFBSurv      | M,P,C    | 0.813        | 0.701        | 0.688        | 0.672        | 0.539        |
+| IMF          | M,P,C    | 0.838        | 0.737        | 0.713        | 0.757        | 0.564        |
+| IHF(w/o CMG) | M,P,C    | <u>0.840</u> | 0.722        | <u>0.723</u> | **0.839**    | **0.591**    |
+| IHF          | M,P,C    | **0.856**    | **0.777**    | **0.735**    | <u>0.812</u> | <u>0.584</u> |
 
