@@ -51,11 +51,33 @@ To run our train code, please download and preprocess the ADNI dataset first, in
 │   ├── xx.nii
 │   ├── xx.nii
 │   └── ....
-├── /ADNI2/PET/
+├── /ADNI1/PET/
 │   ├── xx.nii
 │   ├── xx.nii
 │   └── ...
+└── clinical.csv
+└── ...
 └── ...
 
 ```
+
+Then modify the contents of the `Config. py` file and change the corresponding path to the path where your dataset is located.
+
+Finally, run `python main_rebuild.py`.
+
+## 5 Experimental Result
+
+The comparative experimental results in ADNI1 datasets.
+
+| Method       | Modality | ACC          | PRE          | BACC         | AUC          | F1           |
+| ------------ | -------- | ------------ | ------------ | ------------ | ------------ | ------------ |
+| HOPE         | M        | 0.611        | 0.599        | 0.699        | 0.648        | 0.593        |
+| Resnet       | M,P      | 0.725        | 0.671        | 0.693        | 0.653        | 0.606        |
+| JSRL         | M,P      | 0.582        | 0.580        | 0.566        | 0.571        | 0.580        |
+| VAPL         | M,C      | 0.630        | 0.621        | 0.628        | 0.635        | 0.651        |
+| Diamond      | M,P      | 0.736        | 0.719        | 0.693        | 0.638        | 0.591        |
+| HFBSurv      | M,P,C    | 0.740        | 0.701        | 0.714        | 0.711        | 0.630        |
+| IMF          | M,P,C    | <u>0.756</u> | 0.740        | 0.710        | 0.720        | 0.605        |
+| IHF(w/o CMG) | M,P,C    | **0.781**    | **0.805**    | **0.741**    | **0.747**    | <u>0.658</u> |
+| IHF          | M,P,C    | 0.737        | <u>0.708</u> | <u>0.723</u> | <u>0.738</u> | **0.666**    |
 
