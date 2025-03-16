@@ -29,27 +29,42 @@
 ├── utils.py
 ```
 
-## 3 Dataset Introduction
+## 3 Dataset
+
+### 3.1  Introduction
 
 The dataset for this study is obtained from the Alzheimer's Disease Neuroimaging Initiative (ADNI), specifically the ADNI-1 and ADNI-2 cohorts. To prevent duplication, subjects present in both datasets were removed from ADNI-2. We selected T1-weighted sMRI, FDG-PET, and clinical data, categorized into four groups: normal controls (NC), sMCI, pMCI, and AD. Demographic information of the dataset is shown in Table below. Additionally, PET data is missing for 82 pMCI and 95 sMCI cases in ADNI-1, and for 1 pMCI and 30 sMCI cases in ADNI-2.
 
 The ADNI dataset link: [ADNI | Alzheimer's Disease Neuroimaging Initiative](https://adni.loni.usc.edu/)
 
+### 3.2 Dataset Split Principle
 
+We employ a `5-fold cross-validation` strategy to ensure robust model evaluation. The dataset is split into training (80%) and validation (20%) subsets, maintaining an equal proportion of each class.
 
 ## 4 Training Process
 
 ### 4.1 Environment Setup
 
-Please create a new virtual environment, then run `pip install -r requirements.txt` to install the necessary library.
+Please create a new virtual environment, then run the following code to install the necessary library.
+
+```shell
+pip install -r requirements.txt
+```
 
 ### 4.2 Hyperparameter setting
 
-We use PyTorch version 2.6.0 with CUDA 11.8, executed on a single Nvidia V100 32GB GPU. We employed a `5-fold cross-validation` approach to ensure robust model evaluation. The model was trained from scratch in two stages, each comprising 150 epochs, with a `batch size of 8` to efficiently manage the data. To optimize the model parameters, we used the `AdamW optimizer` and set the `learning rate to 0.001` to ensure precise adjustments during the training process. Additionally, we implemented the` Cosine Learning Rate Scheduler`, with the hyperparameter $T_{max}$ set to 50, to dynamically adjust the learning rate throughout the training.
+- PyTorch version: `2.6.0` with CUDA `11.8`
+- GPU: `Nvidia V100 32GB`
+- Training: `Two-stage training` (each stage with `150 epochs`)
+- Batch size: `8`
+- Optimizer: `AdamW`
+- Learning rate: `0.001`
+- Scheduler: `Cosine Annealing` with `T_max=50`
 
 ### 4.3 training step
 
-To run our train code, please download and preprocess the ADNI dataset first, including the MRI, PET, and clinical modalities, then place the data corresponding to the three modalities into the folder shown below.
+1. Download and preprocess the ADNI dataset, including MRI, PET, and clinical modalities
+2. Place the data in the following folder structure:
 
 ```
 .
@@ -67,9 +82,13 @@ To run our train code, please download and preprocess the ADNI dataset first, in
 
 ```
 
-Then modify the contents of the `Config. py` file and change the corresponding path to the path where your dataset is located.
+3. Modify `Config.py` to specify dataset paths.
 
-Finally, run `python main_rebuild.py`.
+4. Run the training script:
+
+```shell
+python main_rebuild.py
+```
 
 ## 5 Experimental Result
 
@@ -102,4 +121,29 @@ Finally, run `python main_rebuild.py`.
 | IMF          | M,P,C    | 0.838        | 0.737        | 0.713        | 0.757        | 0.564        |
 | IHF(w/o CMG) | M,P,C    | <u>0.840</u> | 0.722        | <u>0.723</u> | **0.839**    | **0.591**    |
 | IHF(Ours)    | M,P,C    | **0.856**    | **0.777**    | **0.735**    | <u>0.812</u> | <u>0.584</u> |
+
+## 6 Example Data for Inference
+
+We provide sample MRI and PET images in `example_data/` for quick inference testing:
+
+```
+example_data/
+├── test_mri.nii
+├── test_pet.nii
+
+```
+
+Please Run:
+
+```shell
+python inference.py 
+```
+
+Due to the sensitive information contained in clinical data, it is not provided here, only as an example in the code
+
+## 7 Pretrained Model
+
+A pretrained model is available for inference. 
+
+Download it from [pretrainedModel Link](https://pan.baidu.com/s/1dKFYZZUZA3lV-WDIRPyrLQ) Extract code: fjyq
 
