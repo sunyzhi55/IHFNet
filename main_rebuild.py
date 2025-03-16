@@ -4,7 +4,7 @@ import argparse
 from datetime import datetime
 from pathlib import Path
 from sklearn.model_selection import KFold, StratifiedKFold
-from Dataset import MriPetDataset, MriPetDatasetNew
+from Dataset import MriPetDatasetNew
 import torch.utils.data
 from model_object import models
 from Config import parse_args
@@ -62,19 +62,13 @@ def prepare_to_train(mri_dir, pet_dir, cli_dir, csv_file, batch_size, model_inde
         #                                              num_workers=4)
 
         # 训练日志和监控
-        target_dir = Path('./logs/')
-        target_dir.mkdir(exist_ok=True)
-        target_dir = target_dir.joinpath('classification')
+        target_dir = Path('./checkpoints/')
         target_dir.mkdir(exist_ok=True)
         current_time = str(datetime.now().strftime('%Y-%m-%d_%H-%M'))
         target_dir = target_dir.joinpath(experiment_settings['Name'] + f'_{current_time}_fold_{fold + 1}')
         target_dir.mkdir(exist_ok=True)
-        checkpoints_dir = target_dir.joinpath('checkpoints')
-        checkpoints_dir.mkdir(exist_ok=True)
-        log_dir = target_dir.joinpath('logs')
-        log_dir.mkdir(exist_ok=True)
 
-        observer = Runtime_Observer(log_dir=log_dir, device=device, name=experiment_settings['Name'], seed=seed)
+        observer = Runtime_Observer(log_dir=target_dir, device=device, name=experiment_settings['Name'], seed=seed)
         observer.log(f'[DEBUG] Observer init successfully, program start @{current_time}\n')
 
         # 模型加载
@@ -138,7 +132,7 @@ if __name__ == "__main__":
     args = parse_args()
     print(args)
     # prepare_to_train(model_index=args.model, mri_dir=args.mri_dir, pet_dir=args.pet_dir, cli_dir=args.cli_dir, csv_file=args.csv_file, batch_size=args.batch_size, seed=args.seed , device=args.device, fold=args.fold, data_parallel=args.data_parallel)
-    prepare_to_train(model_index=args.model, mri_dir=args.mri_dir, pet_dir=args.pet_dir,
-                     cli_dir=args.cli_dir,csv_file=args.csv_file, batch_size=args.batch_size,
+    prepare_to_train(mri_dir=args.mri_dir, pet_dir=args.pet_dir, cli_dir=args.cli_dir,
+                     csv_file=args.csv_file, batch_size=args.batch_size, model_index=args.model,
                      seed=args.seed, device=args.device, data_parallel=args.data_parallel,
                      n_splits=args.n_splits, others_params=args)

@@ -59,9 +59,9 @@ class Runtime_Observer:
         self.test_spe = torchmetrics.Specificity(num_classes=2, task='binary').to(device)
         self.model_save_path = self.log_dir + '/best_model.pth'
     def update(self, prediction, prob, label):
-        print("prediction", prediction)
-        print("label", label)
-        print("prob", prob)
+        # print("prediction", prediction)
+        # print("label", label)
+        # print("prob", prob)
         self.test_acc.update(prediction, label)
         self.test_auc.update(prob, label)
         self.test_recall.update(prediction, label)

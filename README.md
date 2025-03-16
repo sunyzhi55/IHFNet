@@ -73,6 +73,8 @@ Finally, run `python main_rebuild.py`.
 
 ## 5 Experimental Result
 
+> In the Modality column, `M`, `P`, and `C` denote MRI, PET, and clinical data.
+
 1、The comparative experimental results in ADNI1 datasets.
 
 | Method       | Modality | ACC          | PRE          | BACC         | AUC          | F1           |
@@ -85,7 +87,7 @@ Finally, run `python main_rebuild.py`.
 | HFBSurv      | M,P,C    | 0.740        | 0.701        | 0.714        | 0.711        | 0.630        |
 | IMF          | M,P,C    | <u>0.756</u> | 0.740        | 0.710        | 0.720        | 0.605        |
 | IHF(w/o CMG) | M,P,C    | **0.781**    | **0.805**    | **0.741**    | **0.747**    | <u>0.658</u> |
-| IHF          | M,P,C    | 0.737        | <u>0.708</u> | <u>0.723</u> | <u>0.738</u> | **0.666**    |
+| IHF(Ours)    | M,P,C    | 0.737        | <u>0.708</u> | <u>0.723</u> | <u>0.738</u> | **0.666**    |
 
 2、The comparative experimental results in ADNI2 datasets.
 
@@ -99,5 +101,5 @@ Finally, run `python main_rebuild.py`.
 | HFBSurv      | M,P,C    | 0.813        | 0.701        | 0.688        | 0.672        | 0.539        |
 | IMF          | M,P,C    | 0.838        | 0.737        | 0.713        | 0.757        | 0.564        |
 | IHF(w/o CMG) | M,P,C    | <u>0.840</u> | 0.722        | <u>0.723</u> | **0.839**    | **0.591**    |
-| IHF          | M,P,C    | **0.856**    | **0.777**    | **0.735**    | <u>0.812</u> | <u>0.584</u> |
+| IHF(Ours)    | M,P,C    | **0.856**    | **0.777**    | **0.735**    | <u>0.812</u> | <u>0.584</u> |
 
