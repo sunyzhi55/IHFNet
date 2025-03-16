@@ -65,8 +65,8 @@ if __name__ == "__main__":
         transforms.Normalize([0.5], [0.5])
     ])
 
-    mri_path = "example/mri.nii"
-    pet_path = "example/pet.nii"
+    mri_path = "example/test_mri.nii"
+    pet_path = "example/test_pet.nii"
     cli_features = [72.91, 1, 13, 205.1, 18.8, 5.1, 1, 0, 0]
 
     prediction, probability = inference(mri_path, pet_path, cli_features, model, device, transform)
